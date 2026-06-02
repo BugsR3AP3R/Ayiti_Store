@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Mes Commandes — AyitiStore{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>📦 Mes Commandes</h1>
+  </div>
+</div>
+
+<div class="container py-5">
+  {% if orders %}
+  <div class="row g-3">
+    {% for order in orders %}
+    <div class="col-12">
+      <div class="bg-white rounded-ayiti shadow-ayiti p-4">
+        <div class="row align-items-center g-3">
+          <div class="col-md-3">
+            <div class="text-muted small">Numéro de commande</div>
+            <div class="fw-bold text-haiti-blue">#{{ order.order_number }}</div>
+            <div class="text-muted small">{{ order.created_at|date:"d/m/Y H:i" }}</div>
+          </div>
+          <div class="col-md-2">
+            <div class="text-muted small">Articles</div>
+            <div class="fw-bold">{{ order.items.count }} article{{ order.items.count|pluralize }}</div>
+          </div>
+          <div class="col-md-2">
+            <div class="text-muted small">Total</div>
+            <div class="fw-bold text-haiti-blue">{{ order.total|floatformat:0 }} HTG</div>
+          </div>
+          <div class="col-md-2">
+            <span class="badge rounded-pill px-3 py-2
+              {% if order.status == 'delivered' %}bg-success
+              {% elif order.status == 'shipped' %}bg-info
+              {% elif order.status == 'confirmed' or order.status == 'processing' %}bg-primary
+              {% elif order.status == 'cancelled' %}bg-danger
+              {% else %}bg-warning text-dark{% endif %}">
+              {{ order.get_status_display }}
+            </span>
+          </div>
+          <div class="col-md-2">
+            <span class="badge rounded-pill px-3 py-2
+              {% if order.payment_status == 'paid' %}bg-success
+              {% elif order.payment_status == 'failed' %}bg-danger
+              {% else %}bg-warning text-dark{% endif %}">
+              {{ order.get_payment_status_display }}
+            </span>
+          </div>
+          <div class="col-md-1 text-end">
+            <a href="{% url 'orders:order_detail' order.order_number %}" class="btn-outline-ayiti" style="padding:0.4rem 0.9rem;font-size:0.82rem;">
+              Voir
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <div style="font-size:4rem;margin-bottom:1rem;">📦</div>
+    <h4 style="font-family:'Playfair Display',serif;">Aucune commande</h4>
+    <p class="text-muted mb-4">Commencez vos achats maintenant!</p>
+    <a href="{% url 'store:product_list' %}" class="btn-primary-ayiti">
+      <i class="bi bi-bag2"></i> Explorer les produits
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

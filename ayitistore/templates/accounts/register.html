@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Créer un compte — AyitiStore{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="auth-card">
+          <div class="auth-header">
+            <div class="auth-logo">🇭🇹</div>
+            <h2>Créer un compte</h2>
+            <p>Rejoignez la communauté AyitiStore</p>
+          </div>
+          <div class="auth-body">
+            {% if messages %}
+              {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+              {% endfor %}
+            {% endif %}
+            <form method="post">
+              {% csrf_token %}
+              <div class="row">
+                <div class="col-6 mb-3">
+                  <label class="form-label">Prénom</label>
+                  <input type="text" name="first_name" class="form-control" placeholder="Jean" required>
+                </div>
+                <div class="col-6 mb-3">
+                  <label class="form-label">Nom</label>
+                  <input type="text" name="last_name" class="form-control" placeholder="Pierre" required>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Nom d'utilisateur</label>
+                <input type="text" name="username" class="form-control" placeholder="jeanpierre" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" placeholder="jean@example.com" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Téléphone</label>
+                <input type="tel" name="phone" class="form-control" placeholder="+509 ">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Mot de passe</label>
+                <div class="input-group">
+                  <input type="password" name="password1" id="password1" class="form-control" placeholder="••••••••" required>
+                  <button class="btn btn-outline-secondary" type="button" onclick="togglePass('password1')">👁</button>
+                </div>
+              </div>
+              <div class="mb-4">
+                <label class="form-label">Confirmer le mot de passe</label>
+                <div class="input-group">
+                  <input type="password" name="password2" id="password2" class="form-control" placeholder="••••••••" required>
+                  <button class="btn btn-outline-secondary" type="button" onclick="togglePass('password2')">👁</button>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-haiti w-100 btn-lg">
+                Créer mon compte
+              </button>
+            </form>
+            <div class="auth-divider"><span>ou</span></div>
+            <p class="text-center mb-0">
+              Déjà un compte ? <a href="{% url 'accounts:login' %}" class="link-haiti">Se connecter</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePass(id) {
+  const input = document.getElementById(id);
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+</script>
+{% endblock %}
