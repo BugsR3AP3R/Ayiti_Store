@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Produits — AyitiStore{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>Nos Produits</h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb justify-content-center mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'store:home' %}" class="text-white-50">Accueil</a></li>
+        <li class="breadcrumb-item active">Produits</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container py-5">
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <div class="d-flex flex-wrap gap-3 align-items-center">
+      <!-- Genre Filter -->
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'store:product_list' %}" class="filter-chip {% if not current_genre %}active{% endif %}">Tous</a>
+        {% for val, label in genres %}
+        <a href="?genre={{ val }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}" class="filter-chip {% if current_genre == val %}active{% endif %}">{{ label }}</a>
+        {% endfor %}
+      </div>
+      <div class="vr d-none d-md-block"></div>
+      <!-- Type Filter -->
+      <div class="d-flex flex-wrap gap-2">
+        <a href="?{% if current_genre %}genre={{ current_genre }}{% endif %}" class="filter-chip {% if not current_type %}active{% endif %}">Tous types</a>
+        <a href="?{% if current_genre %}genre={{ current_genre }}&{% endif %}type=vetement" class="filter-chip {% if current_type == 'vetement' %}active{% endif %}">👕 Vêtements</a>
+        <a href="?{% if current_genre %}genre={{ current_genre }}&{% endif %}type=accessoire" class="filter-chip {% if current_type == 'accessoire' %}active{% endif %}">👜 Accessoires</a>
+        <a href="?{% if current_genre %}genre={{ current_genre }}&{% endif %}type=chaussure" class="filter-chip {% if current_type == 'chaussure' %}active{% endif %}">👟 Chaussures</a>
+        <a href="?{% if current_genre %}genre={{ current_genre }}&{% endif %}type=sac" class="filter-chip {% if current_type == 'sac' %}active{% endif %}">👝 Sacs</a>
+        <a href="?{% if current_genre %}genre={{ current_genre }}&{% endif %}type=bijou" class="filter-chip {% if current_type == 'bijou' %}active{% endif %}">💎 Bijoux</a>
+      </div>
+      <div class="ms-auto">
+        <select class="form-ayiti" style="width:auto;padding:0.4rem 2rem 0.4rem 0.8rem;"
+                onchange="window.location.href='{% url 'store:product_list' %}?'+new URLSearchParams({...Object.fromEntries(new URLSearchParams(window.location.search)),sort:this.value})">
+          <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>Plus récents</option>
+          <option value="price" {% if sort == 'price' %}selected{% endif %}>Prix croissant</option>
+          <option value="-price" {% if sort == '-price' %}selected{% endif %}>Prix décroissant</option>
+          <option value="name" {% if sort == 'name' %}selected{% endif %}>A → Z</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 g-md-4">
+    {% if products %}
+      {% for product in products %}
+      <div class="col-6 col-md-4 col-lg-3">
+        {% include 'includes/product_card.html' with product=product %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-12 text-center py-5">
+        <div style="font-size:4rem;margin-bottom:1rem;">🔍</div>
+        <h4>Aucun produit trouvé</h4>
+        <p class="text-muted">Essayez d'autres filtres ou termes de recherche.</p>
+        <a href="{% url 'store:product_list' %}" class="btn-outline-ayiti">Voir tous les produits</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

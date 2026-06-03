@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Commande Confirmée — AyitiStore{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="text-center mb-4">
+        <div class="confirmation-icon">✓</div>
+        <h2 style="font-family:'Playfair Display',serif;">Commande Confirmée!</h2>
+        <p class="text-muted">Merci {{ order.first_name }}! Votre commande a été bien reçue.</p>
+        <div class="d-inline-block px-4 py-2 rounded-ayiti" style="background:rgba(0,63,138,0.08);">
+          <span class="text-muted small">Numéro de commande</span><br>
+          <strong style="color:var(--haiti-blue);font-size:1.3rem;">#{{ order.order_number }}</strong>
+        </div>
+      </div>
+
+      <div class="checkout-card">
+        <h6 style="font-family:'Playfair Display',serif;margin-bottom:1.2rem;">Articles commandés</h6>
+        <table class="table order-summary-table table-borderless mb-0">
+          <thead style="background:var(--light);border-radius:8px;">
+            <tr>
+              <th>Produit</th>
+              <th class="text-center">Qté</th>
+              <th class="text-end">Prix</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.items.all %}
+            <tr>
+              <td>
+                <div class="fw-bold">{{ item.product_name }}</div>
+                {% if item.size %}<small class="text-muted">Taille: {{ item.size }}</small>{% endif %}
+                {% if item.color %}<small class="text-muted"> | Couleur: {{ item.color }}</small>{% endif %}
+              </td>
+              <td class="text-center">{{ item.quantity }}</td>
+              <td class="text-end fw-bold">{{ item.total_price|floatformat:0 }} HTG</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot style="border-top:2px solid var(--border);">
+            <tr>
+              <td colspan="2" class="fw-bold">Livraison</td>
+              <td class="text-end fw-bold {% if order.shipping_cost == 0 %}text-success{% endif %}">
+                {% if order.shipping_cost == 0 %}GRATUITE{% else %}{{ order.shipping_cost|floatformat:0 }} HTG{% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2" class="fw-bold fs-5">Total</td>
+              <td class="text-end" style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:var(--haiti-blue);">{{ order.total|floatformat:0 }} HTG</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="checkout-card">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <h6 style="font-family:'Playfair Display',serif;">Livraison</h6>
+            <p class="text-muted small mb-0">
+              {{ order.full_name }}<br>
+              {{ order.address }}<br>
+              {{ order.city }}, {{ order.department }}<br>
+              📞 {{ order.phone }}
+            </p>
+          </div>
+          <div class="col-sm-6">
+            <h6 style="font-family:'Playfair Display',serif;">Paiement</h6>
+            <p class="text-muted small mb-2">{{ order.get_payment_method_display }}</p>
+            <span class="badge rounded-pill px-3 py-2 {% if order.payment_status == 'paid' %}bg-success{% elif order.payment_status == 'pending' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+              {{ order.get_payment_status_display }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRACKING PREVIEW -->
+      <div class="checkout-card">
+        <h6 style="font-family:'Playfair Display',serif;margin-bottom:1.2rem;">Suivi de commande</h6>
+        <div class="tracking-timeline">
+          {% for track in order.tracking.all %}
+          <div class="tracking-step {% if forloop.first %}active{% else %}completed{% endif %}">
+            <div class="tracking-dot"></div>
+            <div class="fw-bold small">{{ track.get_status_display }}</div>
+            <div class="text-muted" style="font-size:0.8rem;">{{ track.description }}</div>
+            <div class="text-muted" style="font-size:0.75rem;">{{ track.created_at|date:"d/m/Y H:i" }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        {% if user.is_authenticated %}
+        <a href="{% url 'orders:order_detail' order.order_number %}" class="btn-outline-ayiti">
+          <i class="bi bi-box me-1"></i>Voir ma commande
+        </a>
+        {% endif %}
+        <a href="{% url 'store:home' %}" class="btn-primary-ayiti">
+          <i class="bi bi-house me-1"></i>Retour à l'accueil
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

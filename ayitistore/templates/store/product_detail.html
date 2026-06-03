@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} — AyitiStore{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <!-- BREADCRUMB -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'store:home' %}" class="text-haiti-blue">Accueil</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'store:genre' product.genre %}" class="text-haiti-blue">{{ product.get_genre_display }}</a></li>
+      <li class="breadcrumb-item"><a href="{{ product.category.get_absolute_url }}" class="text-haiti-blue">{{ product.category.name }}</a></li>
+      <li class="breadcrumb-item active">{{ product.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-5">
+    <!-- GALLERY -->
+    <div class="col-lg-5">
+      <div class="product-gallery">
+        {% if product.main_image %}
+          <img src="{{ product.main_image.image.url }}" alt="{{ product.name }}" class="main-product-img shadow-ayiti" id="main-product-img">
+        {% else %}
+          <div class="main-product-img bg-light d-flex align-items-center justify-content-center shadow-ayiti" style="aspect-ratio:3/4;border-radius:var(--radius);">
+            <span style="font-size:8rem;">
+              {% if product.type_produit == 'chaussure' %}👟{% elif product.type_produit == 'accessoire' %}👜{% elif product.genre == 'femme' %}👗{% elif product.genre == 'homme' %}👔{% else %}🛍️{% endif %}
+            </span>
+          </div>
+        {% endif %}
+
+        {% if images.count > 1 %}
+        <div class="thumb-grid mt-2">
+          {% for img in images %}
+          <img src="{{ img.image.url }}" alt="{{ img.alt_text|default:product.name }}"
+               class="thumb-img {% if img.is_main %}active{% endif %}">
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- PRODUCT INFO -->
+    <div class="col-lg-7">
+      <div class="d-flex gap-2 mb-2">
+        {% if product.is_new %}<span class="badge-new">NOUVEAU</span>{% endif %}
+        {% if product.discount_percent %}<span class="badge-sale">-{{ product.discount_percent }}% SOLDE</span>{% endif %}
+        <span class="badge rounded-pill px-3" style="background:rgba(0,63,138,0.1);color:var(--haiti-blue);font-size:0.75rem;">{{ product.get_genre_display }}</span>
+      </div>
+
+      <h1 style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;margin-bottom:0.5rem;">{{ product.name }}</h1>
+      <p class="text-muted mb-2">{{ product.category.name }}</p>
+
+      <!-- RATING -->
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="stars-mini" style="font-size:1rem;">
+          {% for i in "12345" %}
+            {% if forloop.counter <= avg_rating|floatformat:0|add:"0" %}★{% else %}☆{% endif %}
+          {% endfor %}
+        </div>
+        <span class="text-muted small">{{ avg_rating|floatformat:1 }}/5 ({{ reviews.count }} avis)</span>
+      </div>
+
+      <!-- PRICE -->
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <span style="font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:900;color:var(--haiti-blue);">{{ product.price|floatformat:0 }} HTG</span>
+        {% if product.old_price %}
+        <span class="text-muted text-decoration-line-through fs-5">{{ product.old_price|floatformat:0 }} HTG</span>
+        <span class="badge-sale">-{{ product.discount_percent }}%</span>
+        {% endif %}
+      </div>
+
+      <p style="color:var(--muted);line-height:1.7;margin-bottom:2rem;">{{ product.description }}</p>
+
+      <form method="post" action="{% url 'store:add_to_cart' product.id %}">
+        {% csrf_token %}
+
+        <!-- COLORS -->
+        {% if colors %}
+        <div class="mb-4">
+          <label class="form-label-ayiti">Couleur</label>
+          <div class="d-flex gap-2 flex-wrap" id="color-selector">
+            {% for color_name, color_hex in colors %}
+            <div class="color-dot" data-color="{{ color_name }}" style="background-color:{{ color_hex }};"
+                 title="{{ color_name }}"></div>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="color" id="selected-color">
+        </div>
+        {% endif %}
+
+        <!-- SIZES -->
+        {% if sizes %}
+        <div class="mb-4">
+          <label class="form-label-ayiti">Taille</label>
+          <div class="d-flex gap-2 flex-wrap">
+            {% for size in sizes %}
+            <button type="button" class="size-btn" data-size="{{ size }}">{{ size }}</button>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="size" id="selected-size">
+        </div>
+        {% endif %}
+
+        <!-- QUANTITY -->
+        <div class="mb-4">
+          <label class="form-label-ayiti">Quantité</label>
+          <div class="d-flex align-items-center gap-3">
+            <div class="qty-control">
+              <button type="button" class="qty-btn" id="qty-minus">−</button>
+              <input type="number" class="qty-display" id="qty-input" name="quantity" value="1" min="1" max="{{ product.stock }}">
+              <button type="button" class="qty-btn" id="qty-plus">+</button>
+            </div>
+            <small class="text-muted">{{ product.stock }} en stock</small>
+          </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="d-flex gap-3 flex-wrap mb-4">
+          <button type="submit" class="btn-primary-ayiti flex-grow-1">
+            <i class="bi bi-bag-plus"></i> Ajouter au Panier
+          </button>
+          {% if user.is_authenticated %}
+          <button type="button" class="action-btn wishlist-btn {% if in_wishlist %}active{% endif %}"
+                  data-product-id="{{ product.id }}" style="width:48px;height:48px;border-radius:50%;font-size:1.1rem;">
+            <i class="bi bi-heart{% if in_wishlist %}-fill{% endif %}"></i>
+          </button>
+          {% endif %}
+        </div>
+      </form>
+
+      <!-- SHIPPING INFO -->
+      <div class="p-3 rounded-ayiti" style="background:rgba(0,63,138,0.06);border:1px solid rgba(0,63,138,0.12);">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <i class="bi bi-truck text-haiti-blue"></i>
+          <span class="fw-600 small">Livraison gratuite dès 5,000 HTG</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-arrow-return-left text-haiti-blue"></i>
+          <span class="text-muted small">Retours acceptés sous 30 jours</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEWS -->
+  <div class="row mt-5">
+    <div class="col-lg-8">
+      <div class="bg-white rounded-ayiti shadow-ayiti p-4">
+        <h3 style="font-family:'Playfair Display',serif;margin-bottom:1.5rem;">Avis des clients</h3>
+
+        {% if user.is_authenticated %}
+        <form method="post" class="mb-4 p-3 rounded-3" style="background:var(--light);">
+          {% csrf_token %}
+          <h6 class="fw-bold mb-3">Laisser un avis</h6>
+          <div class="mb-3">
+            <label class="form-label-ayiti">Note</label>
+            <div class="d-flex gap-2">
+              {% for i in "12345" %}
+              <label class="d-flex align-items-center gap-1 cursor-pointer">
+                <input type="radio" name="rating" value="{{ forloop.counter }}" required>
+                <span style="font-size:1.2rem;color:var(--gold);">★</span> {{ forloop.counter }}
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label-ayiti">Commentaire</label>
+            <textarea name="comment" rows="3" class="form-ayiti" placeholder="Partagez votre expérience..." required></textarea>
+          </div>
+          <button type="submit" class="btn-primary-ayiti">Publier l'avis</button>
+        </form>
+        {% endif %}
+
+        {% if reviews %}
+        {% for review in reviews %}
+        <div class="border-bottom pb-3 mb-3">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <strong>{{ review.user.get_full_name|default:review.user.username }}</strong>
+              <div class="stars-mini">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+            </div>
+            <small class="text-muted">{{ review.created_at|date:"d M Y" }}</small>
+          </div>
+          <p class="mt-2 mb-0 text-muted">{{ review.comment }}</p>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="text-muted text-center py-3">Aucun avis pour le moment. Soyez le premier!</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- RELATED -->
+  {% if related %}
+  <div class="mt-5">
+    <h3 style="font-family:'Playfair Display',serif;margin-bottom:1.5rem;">Vous aimerez aussi</h3>
+    <div class="row g-3">
+      {% for prod in related %}
+      <div class="col-6 col-md-3">
+        {% include 'includes/product_card.html' with product=prod %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.size-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('selected-size').value = this.dataset.size;
+  });
+});
+document.querySelectorAll('.color-dot').forEach(dot => {
+  dot.addEventListener('click', function() {
+    document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('selected-color').value = this.dataset.color;
+  });
+});
+</script>
+{% endblock %}
+{% endblock %}

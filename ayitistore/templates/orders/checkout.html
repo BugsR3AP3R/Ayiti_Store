@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Commande — AyitiStore{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>Finaliser la Commande</h1>
+  </div>
+</div>
+
+<div class="container py-5">
+  <form method="post">
+    {% csrf_token %}
+    <div class="row g-4">
+      <!-- LEFT: FORM -->
+      <div class="col-lg-7">
+        <!-- SHIPPING INFO -->
+        <div class="checkout-card">
+          <h5 class="d-flex align-items-center mb-4" style="font-family:'Playfair Display',serif;">
+            <span class="checkout-step-badge">1</span> Informations de Livraison
+          </h5>
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label-ayiti">Prénom *</label>
+              <input type="text" name="first_name" class="form-ayiti" required value="{{ profile.user.first_name|default:'' }}">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label-ayiti">Nom *</label>
+              <input type="text" name="last_name" class="form-ayiti" required value="{{ profile.user.last_name|default:'' }}">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label-ayiti">Email *</label>
+              <input type="email" name="email" class="form-ayiti" required value="{{ profile.user.email|default:'' }}">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label-ayiti">Téléphone *</label>
+              <input type="tel" name="phone" class="form-ayiti" required placeholder="+509 XXXX XXXX" value="{{ profile.phone|default:'' }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label-ayiti">Adresse de livraison *</label>
+              <input type="text" name="address" class="form-ayiti" required placeholder="Rue, numéro, quartier" value="{{ profile.address|default:'' }}">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label-ayiti">Ville *</label>
+              <input type="text" name="city" class="form-ayiti" required value="{{ profile.city|default:'Port-au-Prince' }}">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label-ayiti">Département *</label>
+              <select name="department" class="form-ayiti" required>
+                <option value="">Choisir...</option>
+                {% for val, label in departments %}
+                <option value="{{ val }}" {% if profile.department == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label-ayiti">Notes (optionnel)</label>
+              <textarea name="notes" class="form-ayiti" rows="2" placeholder="Instructions spéciales pour la livraison..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAYMENT METHOD -->
+        <div class="checkout-card">
+          <h5 class="d-flex align-items-center mb-4" style="font-family:'Playfair Display',serif;">
+            <span class="checkout-step-badge">2</span> Mode de Paiement
+          </h5>
+
+          <div class="payment-option payment-paypal" data-method="paypal" onclick="selectPayment(this,'paypal')">
+            <input type="radio" name="payment_method" value="paypal">
+            <div class="payment-icon">💳</div>
+            <div>
+              <div class="fw-bold">PayPal</div>
+              <small class="text-muted">Paiement sécurisé par carte ou compte PayPal</small>
+            </div>
+            <i class="bi bi-chevron-right ms-auto text-muted"></i>
+          </div>
+
+          <div class="payment-option payment-moncash" data-method="moncash" onclick="selectPayment(this,'moncash')">
+            <input type="radio" name="payment_method" value="moncash">
+            <div class="payment-icon">📱</div>
+            <div>
+              <div class="fw-bold">MonCash</div>
+              <small class="text-muted">Paiement mobile via Digicel MonCash</small>
+            </div>
+            <i class="bi bi-chevron-right ms-auto text-muted"></i>
+          </div>
+
+          <div class="payment-option payment-natcash" data-method="natcash" onclick="selectPayment(this,'natcash')">
+            <input type="radio" name="payment_method" value="natcash">
+            <div class="payment-icon" style="background:#00923F;color:white;">💚</div>
+            <div>
+              <div class="fw-bold">NatCash</div>
+              <small class="text-muted">Paiement mobile via Natcom NatCash</small>
+            </div>
+            <i class="bi bi-chevron-right ms-auto text-muted"></i>
+          </div>
+
+          <div class="payment-option payment-cash" data-method="cash" onclick="selectPayment(this,'cash')">
+            <input type="radio" name="payment_method" value="cash">
+            <div class="payment-icon">💵</div>
+            <div>
+              <div class="fw-bold">Paiement à la livraison</div>
+              <small class="text-muted">Payez en espèces à la réception</small>
+            </div>
+            <i class="bi bi-chevron-right ms-auto text-muted"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: SUMMARY -->
+      <div class="col-lg-5">
+        <div class="cart-summary" style="position:sticky;top:90px;">
+          <h5 style="font-family:'Playfair Display',serif;margin-bottom:1.5rem;">Résumé de la commande</h5>
+
+          {% for item in items %}
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center gap-2">
+              {% if item.product.main_image %}
+              <img src="{{ item.product.main_image.image.url }}" style="width:40px;height:50px;object-fit:cover;border-radius:6px;">
+              {% endif %}
+              <div>
+                <div class="small fw-bold">{{ item.product.name }}</div>
+                <div class="text-muted" style="font-size:0.75rem;">
+                  {% if item.size %}T:{{ item.size }}{% endif %}
+                  {% if item.color %} C:{{ item.color }}{% endif %}
+                  × {{ item.quantity }}
+                </div>
+              </div>
+            </div>
+            <span class="fw-bold small text-haiti-blue">{{ item.total_price|floatformat:0 }} HTG</span>
+          </div>
+          {% endfor %}
+
+          <hr>
+          <div class="d-flex justify-content-between mb-1">
+            <span class="text-muted small">Sous-total</span>
+            <span class="fw-bold small">{{ cart.subtotal|floatformat:0 }} HTG</span>
+          </div>
+          <div class="d-flex justify-content-between mb-3">
+            <span class="text-muted small">Livraison</span>
+            <span class="fw-bold small {% if shipping_cost == 0 %}text-success{% endif %}">
+              {% if shipping_cost == 0 %}GRATUITE{% else %}{{ shipping_cost|floatformat:0 }} HTG{% endif %}
+            </span>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between mb-4">
+            <span class="fw-bold">Total</span>
+            <span style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--haiti-blue);">{{ total|floatformat:0 }} HTG</span>
+          </div>
+
+          <button type="submit" class="btn-primary-ayiti w-100 justify-content-center" style="font-size:1rem;padding:1rem;">
+            <i class="bi bi-lock"></i> Confirmer la Commande
+          </button>
+          <p class="text-center text-muted mt-2" style="font-size:0.78rem;">
+            <i class="bi bi-shield-check me-1"></i>Paiement 100% sécurisé
+          </p>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+{% block extra_js %}
+<script>
+function selectPayment(el, method) {
+  document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input[type=radio]').checked = true;
+}
+</script>
+{% endblock %}
+{% endblock %}

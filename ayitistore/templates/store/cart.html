@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mon Panier — AyitiStore{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>🛒 Mon Panier</h1>
+    <p class="mb-0" style="color:rgba(255,255,255,0.7);">{{ cart.total_items }} article{{ cart.total_items|pluralize }}</p>
+  </div>
+</div>
+
+<div class="container py-5">
+  {% if items %}
+  <div class="row g-4">
+    <!-- CART ITEMS -->
+    <div class="col-lg-8">
+      <div class="cart-container">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+          <h5 class="mb-0" style="font-family:'Playfair Display',serif;">Articles</h5>
+          <a href="{% url 'store:product_list' %}" class="text-haiti-blue small">← Continuer les achats</a>
+        </div>
+
+        {% for item in items %}
+        <div class="cart-item" id="cart-item-{{ item.id }}">
+          {% if item.product.main_image %}
+            <img src="{{ item.product.main_image.image.url }}" alt="{{ item.product.name }}" class="cart-item-img">
+          {% else %}
+            <div class="cart-item-placeholder">
+              {% if item.product.genre == 'femme' %}👗{% elif item.product.genre == 'homme' %}👔{% else %}🛍️{% endif %}
+            </div>
+          {% endif %}
+
+          <div class="flex-grow-1">
+            <a href="{{ item.product.get_absolute_url }}" class="text-decoration-none">
+              <h6 class="fw-bold mb-1" style="color:var(--text);">{{ item.product.name }}</h6>
+            </a>
+            <div class="text-muted small mb-2">
+              {% if item.size %}Taille: <strong>{{ item.size }}</strong>{% endif %}
+              {% if item.color %} | Couleur: <strong>{{ item.color }}</strong>{% endif %}
+              | {{ item.product.category.name }}
+            </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <div class="qty-control">
+                <button class="qty-btn" data-item-id="{{ item.id }}" data-action="minus">−</button>
+                <input type="number" class="qty-display" id="qty-{{ item.id }}" value="{{ item.quantity }}" min="1">
+                <button class="qty-btn" data-item-id="{{ item.id }}" data-action="plus">+</button>
+              </div>
+              <div class="d-flex align-items-center gap-3">
+                <span class="fw-bold text-haiti-blue" id="item-total-{{ item.id }}">{{ item.total_price|floatformat:0 }} HTG</span>
+                <form method="post" action="{% url 'store:remove_from_cart' item.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Supprimer">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="col-lg-4">
+      <div class="cart-summary">
+        <h5 style="font-family:'Playfair Display',serif;margin-bottom:1.5rem;">Récapitulatif</h5>
+
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Sous-total</span>
+          <span class="fw-bold" id="cart-subtotal">{{ cart.subtotal|floatformat:0 }} HTG</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Livraison</span>
+          <span class="fw-bold {% if shipping_cost == 0 %}text-success{% endif %}">
+            {% if shipping_cost == 0 %}GRATUITE{% else %}{{ shipping_cost|floatformat:0 }} HTG{% endif %}
+          </span>
+        </div>
+        {% if shipping_cost > 0 %}
+        <div class="alert-ayiti alert-info-ayiti mb-3 small">
+          <i class="bi bi-info-circle me-1"></i> Livraison gratuite à partir de 5,000 HTG
+        </div>
+        {% endif %}
+        <hr>
+        <div class="d-flex justify-content-between mb-4">
+          <span class="fw-bold fs-5">Total</span>
+          <span style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;color:var(--haiti-blue);">{{ total|floatformat:0 }} HTG</span>
+        </div>
+
+        <a href="{% url 'orders:checkout' %}" class="btn-primary-ayiti w-100 justify-content-center mb-3" style="font-size:1rem;">
+          <i class="bi bi-credit-card"></i> Procéder au Paiement
+        </a>
+
+        <!-- PAYMENT ICONS -->
+        <div class="text-center mt-3">
+          <p class="text-muted small mb-2">Modes de paiement acceptés</p>
+          <div class="d-flex justify-content-center gap-2 flex-wrap">
+            <span class="badge px-2 py-1" style="background:#FFC439;color:#333;border-radius:6px;font-size:0.75rem;">PayPal</span>
+            <span class="badge px-2 py-1" style="background:#FFCD00;color:#333;border-radius:6px;font-size:0.75rem;">MonCash</span>
+            <span class="badge px-2 py-1" style="background:#00923F;color:white;border-radius:6px;font-size:0.75rem;">NatCash</span>
+            <span class="badge px-2 py-1" style="background:var(--light);color:#333;border-radius:6px;font-size:0.75rem;">💵 Cash</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <div style="font-size:5rem;margin-bottom:1rem;">🛒</div>
+    <h3 style="font-family:'Playfair Display',serif;">Votre panier est vide</h3>
+    <p class="text-muted mb-4">Découvrez notre collection et ajoutez des articles!</p>
+    <a href="{% url 'store:product_list' %}" class="btn-primary-ayiti">
+      <i class="bi bi-bag2"></i> Explorer les produits
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

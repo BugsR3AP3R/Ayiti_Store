@@ -1,0 +1,53 @@
+{% load static %}
+<div class="product-card h-100">
+  <div class="product-img-wrapper">
+    {% if product.main_image %}
+      <img src="{{ product.main_image.image.url }}" alt="{{ product.name }}">
+    {% else %}
+      <div class="product-placeholder">
+        {% if product.type_produit == 'chaussure' %}👟{% elif product.type_produit == 'accessoire' %}👜{% elif product.genre == 'femme' %}👗{% elif product.genre == 'homme' %}👔{% elif product.genre == 'garcon' %}🧒{% elif product.genre == 'fille' %}👧{% else %}🛍️{% endif %}
+      </div>
+    {% endif %}
+
+    <div class="product-badges">
+      {% if product.is_new %}<span class="badge-new">NOUVEAU</span>{% endif %}
+      {% if product.discount_percent > 0 %}<span class="badge-sale">-{{ product.discount_percent }}%</span>{% endif %}
+    </div>
+
+    <div class="product-actions">
+      {% if user.is_authenticated %}
+      <button class="action-btn wishlist-btn {% if product in user.wishlist.all %}active{% endif %}"
+              data-product-id="{{ product.id }}" title="Ajouter aux favoris">
+        <i class="bi bi-heart{% if product in user.wishlist.all %}-fill{% endif %}"></i>
+      </button>
+      {% endif %}
+      <a href="{{ product.get_absolute_url }}" class="action-btn" title="Voir détails">
+        <i class="bi bi-eye"></i>
+      </a>
+    </div>
+
+    <form method="post" action="{% url 'store:add_to_cart' product.id %}">
+      {% csrf_token %}
+      <div class="product-add-overlay add-to-cart-form" onclick="this.closest('form').submit()">
+        <i class="bi bi-bag-plus me-1"></i> Ajouter au Panier
+      </div>
+    </form>
+  </div>
+
+  <div class="product-body">
+    <div class="product-category">{{ product.category.name }}</div>
+    <a href="{{ product.get_absolute_url }}" class="text-decoration-none">
+      <h6 class="product-name">{{ product.name }}</h6>
+    </a>
+    <div class="stars-mini mb-1">
+      ★★★★☆ <small class="text-muted">({{ product.reviews.count }})</small>
+    </div>
+    <div class="product-price-wrapper">
+      <span class="product-price">{{ product.price|floatformat:0 }} HTG</span>
+      {% if product.old_price %}
+        <span class="product-old-price">{{ product.old_price|floatformat:0 }} HTG</span>
+        {% if product.discount_percent %}<span class="product-discount">-{{ product.discount_percent }}%</span>{% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
